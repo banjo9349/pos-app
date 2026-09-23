@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>นักล่ายูนิฟอร์ม POS</title>
+  
+  <!-- PWA & Mobile Meta Tags -->
+  <meta name="theme-color" content="#f97316">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="นักล่ายูนิฟอร์ม POS">
+  <link id="manifest-link" rel="manifest">
+
+  <style>
+    :root {
+      --primary: #f97316;
+      --primary-dark: #ea580c;
+      --bg-color: #f3f4f6;
+      --card-bg: #ffffff;
+      --text-main: #1f2937;
+      --text-muted: #6b7280;
+      --border-color: #e5e7eb;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background-color: var(--bg-color); color: var(--text-main); padding-bottom: 75px; min-height: 100vh; }
+
+    /* Header */
+    .app-header { background-color: var(--primary); color: white; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 20; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .store-title { font-size: 1.1rem; font-weight: bold; }
+    .store-sub { font-size: 0.75rem; opacity: 0.9; }
+    .queue-badge { background: rgba(255,255,255,0.25); padding: 4px 12px; border-radius: 20px; text-align: right; }
+    .queue-badge span { display: block; font-size: 0.65rem; }
+    .queue-badge strong { font-size: 1.1rem; }
+
+    /* Container */
+    .container { max-width: 480px; margin: 0 auto; padding: 12px; }
+
+    /* Cards */
+    .card { background: var(--card-bg); border-radius: 14px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
+    .card-title { font-size: 0.9rem; font-weight: bold; margin-bottom: 10px; color: #374151; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f3f4f6; padding-bottom: 8px; }
+
+    /* Menu Grid */
+    .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .menu-card { background: #fff; border: 1.5px solid var(--border-color); border-radius: 12px; padding: 12px; text-align: left; cursor: pointer; }
+    .menu-card:active { transform: scale(0.97); border-color: var(--primary); background: #fff7ed; }
+    .menu-name { font-weight: bold; font-size: 0.88rem; color: #111827; }
+    .menu-price { color: var(--primary); font-weight: bold; font-size: 0.85rem; margin-top: 4px; }
+
+    /* Topping Chips */
+    .topping-flex { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .chip { padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; border: 1px solid #d1d5db; background: #fff; cursor: pointer; color: #4b5563; font-weight: 500; }
+    .chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+    /* Cart */
+    .cart-list { max-height: 160px; overflow-y: auto; margin-bottom: 10px; }
+    .cart-item { display: flex; justify-content: space-between; align-items: center; background: #f9fafb; padding: 8px 10px; border-radius: 8px; margin-bottom: 6px; font-size: 0.85rem; }
+    .item-del { color: #ef4444; background: none; border: none; font-weight: bold; padding: 2px 8px; cursor: pointer; font-size: 1rem; }
+
+    /* Kitchen UI */
+    .kitchen-tab-bar { display: flex; gap: 8px; margin-bottom: 12px; }
+    .sub-tab-btn { flex: 1; padding: 8px; text-align: center; font-size: 0.78rem; font-weight: bold; border-radius: 8px; background: #e5e7eb; border: none; color: #4b5563; cursor: pointer; }
+    .sub-tab-btn.active { background: var(--primary); color: white; }
+
+    .ticket-card { background: #ffffff; border: 2px solid #e5e7eb; border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+    .ticket-card.status-pending { border-color: #f97316; background: #fff7ed; }
+    .ticket-card.status-doing { border-color: #3b82f6; background: #eff6ff; }
+    .ticket-card.status-done { border-color: #10b981; opacity: 0.6; }
+
+    .ticket-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #cbd5e1; padding-bottom: 6px; margin-bottom: 8px; }
+    .ticket-queue { font-size: 1.1rem; font-weight: bold; color: #111827; }
+    .ticket-time { font-size: 0.7rem; color: #6b7280; }
+
+    .ticket-item-row { margin-bottom: 6px; font-size: 0.88rem; }
+    .ticket-item-name { font-weight: bold; color: #1f2937; }
+    .ticket-topping-chip { display: inline-block; background: #fee2e2; color: #dc2626; font-size: 0.7rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; margin-top: 2px; }
+    .ticket-note-box { background: #fef08a; border-left: 3px solid #ca8a04; color: #854d0e; padding: 6px 8px; font-size: 0.75rem; font-weight: bold; border-radius: 4px; margin-top: 6px; }
+
+    .badge-status { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; }
+    .badge-pending { background: #ffedd5; color: #c2410c; }
+    .badge-doing { background: #dbeafe; color: #1e40af; }
+    .badge-done { background: #d1fae5; color: #065f46; }
+
+    .summary-item-row { display: flex; justify-content: space-between; align-items: center; background: #f9fafb; padding: 10px; border-radius: 8px; border-left: 4px solid var(--primary); margin-bottom: 6px; }
+    .summary-qty { font-size: 1.1rem; font-weight: bold; color: var(--primary); }
+
+    /* Inputs & Buttons */
+    .input-text { width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.8rem; margin-bottom: 10px; outline: none; }
+    .btn { width: 100%; padding: 11px; border-radius: 10px; font-weight: bold; font-size: 0.88rem; border: none; cursor: pointer; text-align: center; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:active { background: var(--primary-dark); }
+    .btn-danger { background: #ef4444; color: white; }
+    .btn-small { padding: 5px 10px; font-size: 0.75rem; border-radius: 6px; }
+    .btn-install { background: #10b981; color: white; font-size: 0.85rem; padding: 10px; margin-bottom: 10px; display: flex; justify-content: center; align-items: center; gap: 6px; }
+
+    /* Bottom Navigation */
+    .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; padding: 8px 0; z-index: 30; }
+    .nav-btn { background: none; border: none; color: var(--text-muted); font-size: 0.7rem; display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; width: 25%; }
+    .nav-btn.active { color: var(--primary); font-weight: bold; }
+    .nav-icon { font-size: 1.1rem; }
+
+    /* Modal */
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 50; padding: 16px; }
+    .modal.show { display: flex; }
+    .modal-body { background: white; border-radius: 16px; padding: 20px; width: 100%; max-width: 320px; text-align: center; }
+    .qr-box { margin: 12px auto; background: #fff; padding: 10px; border: 1px solid #e5e7eb; border-radius: 12px; }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <!-- Header Header -->
+  <header class="app-header">
+    <div>
+      <div class="store-title" id="headerStoreName">นักล่ายูนิฟอร์ม</div>
+      <div class="store-sub">ระบบ POS & ห้องครัว</div>
+    </div>
+    <div class="queue-badge">
+      <span>คิวปัจจุบัน</span>
+      <strong id="displayQueueHeader">#1</strong>
+    </div>
+  </header>
+
+  <!-- Content Container -->
+  <main class="container">
+
+    <!-- TAB 1: สั่งอาหาร -->
+    <section id="tabOrder">
+      <div class="card">
+        <div class="card-title">เลือกรายการอาหาร</div>
+        <div class="menu-grid" id="menuList"></div>
+
+        <div class="card-title" style="margin-top: 10px;">ท็อปปิ้ง / ตัวเลือกเสริม</div>
+        <div class="topping-flex" id="toppingList"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>รายการสั่งซื้อ</span>
+          <button onclick="clearCart()" style="color:#ef4444; border:none; background:none; font-size:0.75rem; cursor:pointer;">ล้างตะกร้า</button>
+        </div>
+
+        <div class="cart-list" id="cartItems"></div>
+
+        <input type="text" id="orderNote" class="input-text" placeholder="ระบุโน้ตเพิ่มเติม (เช่น ไม่เผ็ด, แยกซอส)...">
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; padding-top:10px; border-top:1px solid #eee;">
+          <div>
+            <div style="font-size:0.75rem; color:#6b7280;">ราคารวมทั้งสิ้น</div>
+            <div id="cartTotal" style="font-size:1.25rem; font-weight:bold; color:var(--primary);">0 B.</div>
+          </div>
+          <button onclick="checkout()" class="btn btn-primary" style="width: auto; padding: 10px 20px;">ยืนยัน & รับเงิน</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: โหมดครัว -->
+    <section id="tabKitchen" class="hidden">
+      <div class="kitchen-tab-bar">
+        <button onclick="switchKitchenSubTab('tickets')" id="subTabTicketsBtn" class="sub-tab-btn active">🎫 บัตรคิวรายออเดอร์</button>
+        <button onclick="switchKitchenSubTab('summary')" id="subTabSummaryBtn" class="sub-tab-btn">📊 สรุปยอดรวมเมนู</button>
+      </div>
+
+      <div id="kitchenTicketsView">
+        <div id="kitchenTicketsContainer"></div>
+      </div>
+
+      <div id="kitchenSummaryView" class="hidden">
+        <div class="card">
+          <div class="card-title">รายการอาหารค้างทำทั้งหมด (Batch)</div>
+          <div id="kitchenSummaryContainer" style="font-size:0.85rem;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: ยอดขาย -->
+    <section id="tabSales" class="hidden">
+      <div class="card">
+        <div class="card-title">สรุปยอดขายประจำวัน</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; text-align:center; margin-top:8px;">
+          <div style="background:#fff7ed; padding:12px; border-radius:10px;">
+            <div style="font-size:0.72rem; color:#6b7280;">ยอดขายรวม</div>
+            <div id="totalRevenue" style="font-size:1.2rem; font-weight:bold; color:var(--primary);">0 B.</div>
+          </div>
+          <div style="background:#eff6ff; padding:12px; border-radius:10px;">
+            <div style="font-size:0.72rem; color:#6b7280;">จำนวนออเดอร์</div>
+            <div id="totalOrdersCount" style="font-size:1.2rem; font-weight:bold; color:#2563eb;">0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">ประวัติรายการขาย</div>
+        <div id="salesHistory" style="font-size:0.8rem; max-height:280px; overflow-y:auto;"></div>
+      </div>
+    </section>
+       <!-- TAB 4: ตั้งค่า & ติดตั้ง PWA -->
+    <section id="tabSettings" class="hidden">
+      <!-- ปุ่มกดติดตั้ง PWA -->
+      <div class="card" style="background:#ecfdf5; border-color:#a7f3d0;">
+        <div class="card-title" style="color:#065f46;">ติดตั้งแอปพลิเคชันลงเครื่อง</div>
+        <p style="font-size:0.75rem; color:#047857; margin-bottom:10px;">กดปุ่มด้านล่างเพื่อติดตั้งแอป POS นี้ลงในหน้าจอโฮมและ App Drawer ของมือถือ</p>
+        <button onclick="installPWA()" id="pwaInstallBtn" class="btn btn-install">📲 กดติดตั้งแอป POS ทันที</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">ข้อมูลร้าน & PromptPay</div>
+        <div style="margin-bottom:8px;">
+          <label style="font-size:0.75rem; color:#4b5563;">ชื่อร้าน</label>
+          <input type="text" id="settingStoreName" class="input-text">
+        </div>
+        <div style="margin-bottom:8px;">
+          <label style="font-size:0.75rem; color:#4b5563;">เบอร์ PromptPay (สำหรับสร้าง QR)</label>
+          <input type="text" id="settingPromptpay" class="input-text">
+        </div>
+        <button onclick="saveStoreSettings()" class="btn btn-primary" style="font-size:0.8rem; padding:8px;">บันทึกข้อมูลร้าน</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">จัดการลำดับคิว</div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:0.8rem;">คิวปัจจุบัน: <b id="settingCurrentQueue">1</b></span>
+          <button onclick="resetQueue()" class="btn btn-danger btn-small" style="width:auto;">รีเซ็ตคิวเริ่มที่ #1</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" style="display:flex; justify-content:space-between;">
+          <span>จัดการเมนูอาหาร</span>
+          <button onclick="addNewMenu()" class="btn btn-primary btn-small" style="width:auto;">+ เพิ่มเมนู</button>
+        </div>
+        <div id="settingMenuList" style="font-size:0.8rem;"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal สแกนจ่าย PromptPay -->
+  <div id="paymentModal" class="modal">
+    <div class="modal-body">
+      <div style="font-size:0.75rem; color:#6b7280;">สแกนชำระเงิน</div>
+      <div id="modalQueueNumber" style="font-size:1.5rem; font-weight:bold; color:var(--primary);">คิวที่ #1</div>
+      
+      <div class="qr-box">
+        <img id="qrImage" src="" alt="PromptPay QR" style="width:160px; height:160px; display:block; margin:0 auto;" />
+      </div>
+      
+      <div style="margin-bottom:12px;">
+        <div style="font-size:0.75rem; color:#6b7280;">ยอดชำระทั้งสิ้น</div>
+        <div id="modalTotalAmount" style="font-size:1.5rem; font-weight:bold; color:#111827;">0 B.</div>
+        <div style="font-size:0.7rem; color:#9ca3af; margin-top:2px;">พร้อมเพย์: <span id="modalPromptpayNo"></span></div>
+      </div>
+
+      <button onclick="confirmPaymentSuccess()" class="btn btn-primary" style="background:#10b981; margin-bottom:8px;">รับเงินเรียบร้อย (ส่งเข้าครัว)</button>
+      <button onclick="closePaymentModal()" class="btn" style="font-size:0.8rem; padding:8px; border:none; background:none; color:#6b7280; width:100%;">ย้อนกลับ</button>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation Bar -->
+  <nav class="nav-bar">
+    <button onclick="switchTab('tabOrder')" id="navOrder" class="nav-btn active">
+      <span class="nav-icon">🛒</span>
+      <span>สั่งอาหาร</span>
+    </button>
+    <button onclick="switchTab('tabKitchen')" id="navKitchen" class="nav-btn">
+      <span class="nav-icon">👨‍🍳</span>
+      <span>ครัว</span>
+    </button>
+    <button onclick="switchTab('tabSales')" id="navSales" class="nav-btn">
+      <span class="nav-icon">📊</span>
+      <span>ยอดขาย</span>
+    </button>
+    <button onclick="switchTab('tabSettings')" id="navSettings" class="nav-btn">
+      <span class="nav-icon">⚙️</span>
+      <span>ตั้งค่า</span>
+    </button>
+  </nav>
+
+  <!-- JavaScript -->
+  <script>
+    // --- PWA Auto Registration Engine ---
+    const manifestData = {
+      "name": "นักล่ายูนิฟอร์ม POS",
+      "short_name": "นักล่ายูนิฟอร์ม",
+      "start_url": "./",
+      "display": "standalone",
+      "background_color": "#ffffff",
+      "theme_color": "#f97316",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%23f97316'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' font-size='280' fill='white'>🛒</text></svg>",
+          "sizes": "512x512",
+          "type": "image/svg+xml",
+          "purpose": "any maskable"
+        }
+      ]
+    };
+    const manifestBlob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
+    document.getElementById('manifest-link').setAttribute('href', URL.createObjectURL(manifestBlob));
+
+    let deferredPrompt;
+    if ('serviceWorker' in navigator) {
+      const swCode = `
+        self.addEventListener('install', (e) => { self.skipWaiting(); });
+        self.addEventListener('activate', (e) => { e.waitUntil(clients.claim()); });
+        self.addEventListener('fetch', (e) => { e.respondWith(fetch(e.request).catch(() => caches.match(e.request))); });
+      `;
+      const swBlob = new Blob([swCode], { type: 'application/javascript' });
+      navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+    });
+
+    function installPWA() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choice) => {
+          if (choice.outcome === 'accepted') {
+            alert('กำลังทำการติดตั้งแอปพลิเคชันลงในเครื่องค่ะ');
+          }
+          deferredPrompt = null;
+        });
+      } else {
+        alert('ระบบพร้อมสำหรับการติดตั้งแล้วค่ะ โจสามารถกดจุด 3 จุด (⋮) ใน Chrome แล้วเลือก "ติดตั้งแอป" ได้ทันทีเลยนะคะ');
+      }
+    }
+
+    /* POS Core Logic */
+    const defaultData = {
+      storeName: "นักล่ายูนิฟอร์ม",
+      promptpay: "0973383488",
+      currentQueue: 1,
+      menus: [
+        { id: 1, name: "Pocket Tori Nanban", price: 59 },
+        { id: 2, name: "Pocket Karaage", price: 49 }
+      ],
+      toppings: [
+        { id: 101, name: "cheese dip", price: 10 }
+      ],
+      orders: []
+    };
+
+    let appData = JSON.parse(localStorage.getItem('pos_app_data')) || defaultData;
+    let cart = [];
+    let selectedToppings = [];
+
+    function saveData() {
+      localStorage.setItem('pos_app_data', JSON.stringify(appData));
+      renderAll();
+    }
+
+    function renderAll() {
+      document.getElementById('headerStoreName').innerText = appData.storeName;
+      document.getElementById('displayQueueHeader').innerText = '#' + appData.currentQueue;
+      document.getElementById('settingStoreName').value = appData.storeName;
+      document.getElementById('settingPromptpay').value = appData.promptpay;
+      document.getElementById('settingCurrentQueue').innerText = appData.currentQueue;
+      
+      renderMenus();
+      renderToppings();
+      renderCart();
+      renderKitchen();
+      renderSales();
+      renderSettingsMenu();
+    }
+
+    function renderMenus() {
+      const container = document.getElementById('menuList');
+      container.innerHTML = appData.menus.map(m => `
+        <div onclick="addToCart(${m.id})" class="menu-card">
+          <div class="menu-name">${m.name}</div>
+          <div class="menu-price">${m.price} B.</div>
+        </div>
+      `).join('');
+    }
+
+    function renderToppings() {
+      const container = document.getElementById('toppingList');
+      container.innerHTML = appData.toppings.map(t => {
+        const isSelected = selectedToppings.includes(t.id);
+        return `
+          <div onclick="toggleTopping(${t.id})" class="chip ${isSelected ? 'active' : ''}">
+            + ${t.name} (${t.price} B.)
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleTopping(id) {
+      if (selectedToppings.includes(id)) {
+        selectedToppings = selectedToppings.filter(item => item !== id);
+      } else {
+        selectedToppings.push(id);
+      }
+      renderToppings();
+    }
+
+    function addToCart(menuId) {
+      const menu = appData.menus.find(m => m.id === menuId);
+      const chosenToppings = appData.toppings.filter(t => selectedToppings.includes(t.id));
+      const toppingCost = chosenToppings.reduce((sum, t) => sum + t.price, 0);
+      const toppingNames = chosenToppings.map(t => t.name).join(', ');
+
+      cart.push({
+        name: menu.name,
+        toppings: toppingNames,
+        totalItemPrice: menu.price + toppingCost
+      });
+
+      selectedToppings = [];
+      renderToppings();
+      renderCart();
+    }
+   
+    function renderCart() {
+      const container = document.getElementById('cartItems');
+      if (cart.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:12px 0;">ยังไม่มีรายการในตะกร้า</div>';
+        document.getElementById('cartTotal').innerText = '0 B.';
+        return;
+      }
+
+      let total = 0;
+      container.innerHTML = cart.map((item, index) => {
+        total += item.totalItemPrice;
+        return `
+          <div class="cart-item">
+            <div>
+              <b>${item.name}</b>
+              ${item.toppings ? `<div style="font-size:0.7rem; color:var(--primary);">+ ${item.toppings}</div>` : ''}
+            </div>
+            <div>
+              <b>${item.totalItemPrice} B.</b>
+              <button onclick="removeFromCart(${index})" class="item-del">✕</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('cartTotal').innerText = total + ' B.';
+    }
+
+    function removeFromCart(index) {
+      cart.splice(index, 1);
+      renderCart();
+    }
+
+    function clearCart() {
+      cart = [];
+      selectedToppings = [];
+      document.getElementById('orderNote').value = '';
+      renderToppings();
+      renderCart();
+    }
+
+    function checkout() {
+      if (cart.length === 0) {
+        alert('กรุณาเลือกรายการอาหารก่อนรับเงินค่ะ');
+        return;
+      }
+      const totalAmount = cart.reduce((sum, item) => sum + item.totalItemPrice, 0);
+      document.getElementById('modalQueueNumber').innerText = 'คิวที่ #' + appData.currentQueue;
+      document.getElementById('modalTotalAmount').innerText = totalAmount + ' B.';
+      document.getElementById('modalPromptpayNo').innerText = appData.promptpay;
+      document.getElementById('qrImage').src = `https://promptpay.io/${appData.promptpay}/${totalAmount}.png`;
+
+      document.getElementById('paymentModal').classList.add('show');
+    }
+
+    function confirmPaymentSuccess() {
+      const totalAmount = cart.reduce((sum, item) => sum + item.totalItemPrice, 0);
+      const note = document.getElementById('orderNote').value;
+
+      appData.orders.unshift({
+        id: Date.now(),
+        queue: appData.currentQueue,
+        time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+        items: cart.map(i => ({ name: i.name, toppings: i.toppings, price: i.totalItemPrice })),
+        total: totalAmount,
+        note: note,
+        status: 'pending'
+      });
+
+      appData.currentQueue += 1;
+      saveData();
+      clearCart();
+      closePaymentModal();
+    }
+
+    function closePaymentModal() {
+      document.getElementById('paymentModal').classList.remove('show');
+    }
+
+    function renderKitchen() {
+      const ticketsContainer = document.getElementById('kitchenTicketsContainer');
+      const summaryContainer = document.getElementById('kitchenSummaryContainer');
+
+      if (appData.orders.length === 0) {
+        ticketsContainer.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:30px 0;">ยังไม่มีออเดอร์ในระบบ</div>';
+      } else {
+        ticketsContainer.innerHTML = appData.orders.map(o => {
+          let statusBadgeClass = 'badge-pending';
+          let statusText = '⏳ รอทำ';
+          let cardStatusClass = 'status-pending';
+          let actionBtnHtml = `<button onclick="updateOrderStatus(${o.id}, 'doing')" class="btn btn-primary" style="padding:6px; font-size:0.75rem; background:#3b82f6;">🔥 เริ่มทำคิวนี้</button>`;
+
+          if (o.status === 'doing') {
+            statusBadgeClass = 'badge-doing';
+            statusText = '🔥 กำลังทำ';
+            cardStatusClass = 'status-doing';
+            actionBtnHtml = `<button onclick="updateOrderStatus(${o.id}, 'done')" class="btn btn-primary" style="padding:6px; font-size:0.75rem; background:#10b981;">✅ ปรุงเสร็จแล้ว</button>`;
+          } else if (o.status === 'done') {
+            statusBadgeClass = 'badge-done';
+            statusText = '✅ เสร็จแล้ว';
+            cardStatusClass = 'status-done';
+            actionBtnHtml = `<button onclick="updateOrderStatus(${o.id}, 'doing')" class="btn" style="padding:4px; font-size:0.7rem; background:#e5e7eb; color:#4b5563;">ย้อนกลับ</button>`;
+          }
+
+          return `
+            <div class="ticket-card ${cardStatusClass}">
+              <div class="ticket-header">
+                <div>
+                  <span class="ticket-queue">คิว #${o.queue}</span>
+                  <span class="ticket-time">(${o.time})</span>
+                </div>
+                <span class="badge-status ${statusBadgeClass}">${statusText}</span>
+              </div>
+
+              <div style="margin-bottom:8px;">
+                ${o.items.map(i => `
+                  <div class="ticket-item-row">
+                    <span class="ticket-item-name">• ${i.name}</span>${i.toppings ? `<br/><span class="ticket-topping-chip">+ ${i.toppings}</span>` : ''}
+                  </div>
+                `).join('')}
+              </div>
+
+              ${o.note ? `<div class="ticket-note-box">⚠️ หมายเหตุ: ${o.note}</div>` : ''}
+
+              <div style="margin-top:10px; text-align:right;">
+                ${actionBtnHtml}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      const activeOrders = appData.orders.filter(o => o.status !== 'done');
+      if (activeOrders.length === 0) {
+        summaryContainer.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px 0;">ไม่มีเมนูค้างทำในขณะนี้</div>';
+      } else {
+        const itemCounts = {};
+        const toppingCounts = {};
+
+        activeOrders.forEach(o => {
+          o.items.forEach(i => {
+            itemCounts[i.name] = (itemCounts[i.name] || 0) + 1;
+            if (i.toppings) {
+              toppingCounts[i.toppings] = (toppingCounts[i.toppings] || 0) + 1;
+            }
+          });
+        });
+
+        let summaryHtml = '<div style="font-weight:bold; color:#4b5563; margin-bottom:6px;">รายการอาหารหลัก:</div>';
+        for (const [name, qty] of Object.entries(itemCounts)) {
+          summaryHtml += `
+            <div class="summary-item-row">
+              <span style="font-weight:bold;">${name}</span>
+              <span class="summary-qty">${qty} จาน</span>
+            </div>
+          `;
+        }
+
+        if (Object.keys(toppingCounts).length > 0) {
+          summaryHtml += '<div style="font-weight:bold; color:#4b5563; margin-top:10px; margin-bottom:6px;">ท็อปปิ้งรวม:</div>';
+          for (const [topName, topQty] of Object.entries(toppingCounts)) {
+            summaryHtml += `
+              <div class="summary-item-row" style="border-left-color:#ef4444; background:#fff5f5;">
+                <span style="font-weight:bold; color:#dc2626;">+ ${topName}</span>
+                <span class="summary-qty" style="color:#dc2626;">${topQty} ชุด</span>
+              </div>
+            `;
+          }
+        }
+
+        summaryContainer.innerHTML = summaryHtml;
+      }
+    }
+
+    function updateOrderStatus(orderId, newStatus) {
+      const order = appData.orders.find(o => o.id === orderId);
+      if (order) {
+        order.status = newStatus;
+        saveData();
+      }
+    }
+
+    function switchKitchenSubTab(tab) {
+      if (tab === 'tickets') {
+        document.getElementById('kitchenTicketsView').classList.remove('hidden');
+        document.getElementById('kitchenSummaryView').classList.add('hidden');
+        document.getElementById('subTabTicketsBtn').classList.add('active');
+        document.getElementById('subTabSummaryBtn').classList.remove('active');
+      } else {
+        document.getElementById('kitchenTicketsView').classList.add('hidden');
+        document.getElementById('kitchenSummaryView').classList.remove('hidden');
+        document.getElementById('subTabTicketsBtn').classList.remove('active');
+        document.getElementById('subTabSummaryBtn').classList.add('active');
+      }
+    }
+
+    function renderSales() {
+      const totalRev = appData.orders.reduce((sum, o) => sum + o.total, 0);
+      document.getElementById('totalRevenue').innerText = totalRev + ' B.';
+      document.getElementById('totalOrdersCount').innerText = appData.orders.length;
+
+      const historyContainer = document.getElementById('salesHistory');
+      if (appData.orders.length === 0) {
+        historyContainer.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px 0;">ยังไม่มีประวัติการขายวันนี้</div>';
+        return;
+      }
+
+      historyContainer.innerHTML = appData.orders.map(o => `
+        <div style="background:#f9fafb; padding:8px 10px; border-radius:8px; margin-bottom:6px; border-left:3px solid var(--primary); display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <b>คิว #${o.queue} (${o.time})</b>
+            <div style="font-size:0.7rem; color:#6b7280;">${o.items.map(i => i.name + (i.toppings ? ' (+' + i.toppings + ')' : '')).join(', ')}</div>
+            ${o.note ? `<div style="font-size:0.68rem; color:var(--primary);">โน้ต: ${o.note}</div>` : ''}
+          </div>
+          <b>${o.total} B.</b>
+        </div>
+      `).join('');
+    }
+
+    function saveStoreSettings() {
+      appData.storeName = document.getElementById('settingStoreName').value;
+      appData.promptpay = document.getElementById('settingPromptpay').value;
+      saveData();
+      alert('บันทึกข้อมูลเรียบร้อยค่ะ');
+    }
+
+    function resetQueue() {
+      if (confirm('ต้องการรีเซ็ตคิวกลับไปเริ่มที่ #1 ใช่ไหมคะ?')) {
+        appData.currentQueue = 1;
+        saveData();
+      }
+    }
+
+    function renderSettingsMenu() {
+      const container = document.getElementById('settingMenuList');
+      container.innerHTML = appData.menus.map(m => `
+        <div style="display:flex; justify-content:space-between; align-items:center; background:#f9fafb; padding:8px; border-radius:6px; margin-top:6px;">
+          <span>${m.name} (${m.price} B.)</span>
+          <button onclick="deleteMenu(${m.id})" style="color:#ef4444; border:none; background:none; cursor:pointer;">ลบ</button>
+        </div>
+      `).join('');
+    }
+
+    function addNewMenu() {
+      const name = prompt('กรอกชื่อเมนูใหม่:');
+      const price = prompt('กรอกราคา (บาท):');
+      if (name && price) {
+        appData.menus.push({ id: Date.now(), name: name, price: Number(price) });
+        saveData();
+      }
+    }
+
+    function deleteMenu(id) {
+      if (confirm('ลบเมนูนี้ใช่ไหมคะ?')) {
+        appData.menus = appData.menus.filter(m => m.id !== id);
+        saveData();
+      }
+    }
+
+    function switchTab(tabId) {
+      document.getElementById('tabOrder').classList.add('hidden');
+      document.getElementById('tabKitchen').classList.add('hidden');
+      document.getElementById('tabSales').classList.add('hidden');
+      document.getElementById('tabSettings').classList.add('hidden');
+      document.getElementById(tabId).classList.remove('hidden');
+
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+      if (tabId === 'tabOrder') document.getElementById('navOrder').classList.add('active');
+      if (tabId === 'tabKitchen') document.getElementById('navKitchen').classList.add('active');
+      if (tabId === 'tabSales') document.getElementById('navSales').classList.add('active');
+      if (tabId === 'tabSettings') document.getElementById('navSettings').classList.add('active');
+    }
+
+    renderAll();
+  </script>
+</body>
+</html>
