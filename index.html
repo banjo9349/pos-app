@@ -2,694 +2,550 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>นักล่ายูนิฟอร์ม POS</title>
-  
-  <!-- PWA & Mobile Meta Tags -->
-  <meta name="theme-color" content="#f97316">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="นักล่ายูนิฟอร์ม POS">
-  <link id="manifest-link" rel="manifest">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Full POS - ระบบบริหารร้านอาหารครบวงจร</title>
+  <script src="https://cdn.tailwindcss.net"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    :root {
-      --primary: #f97316;
-      --primary-dark: #ea580c;
-      --bg-color: #f3f4f6;
-      --card-bg: #ffffff;
-      --text-main: #1f2937;
-      --text-muted: #6b7280;
-      --border-color: #e5e7eb;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background-color: var(--bg-color); color: var(--text-main); padding-bottom: 75px; min-height: 100vh; }
-
-    /* Header */
-    .app-header { background-color: var(--primary); color: white; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 20; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    .store-title { font-size: 1.1rem; font-weight: bold; }
-    .store-sub { font-size: 0.75rem; opacity: 0.9; }
-    .queue-badge { background: rgba(255,255,255,0.25); padding: 4px 12px; border-radius: 20px; text-align: right; }
-    .queue-badge span { display: block; font-size: 0.65rem; }
-    .queue-badge strong { font-size: 1.1rem; }
-
-    /* Container */
-    .container { max-width: 480px; margin: 0 auto; padding: 12px; }
-
-    /* Cards */
-    .card { background: var(--card-bg); border-radius: 14px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
-    .card-title { font-size: 0.9rem; font-weight: bold; margin-bottom: 10px; color: #374151; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f3f4f6; padding-bottom: 8px; }
-
-    /* Menu Grid */
-    .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-    .menu-card { background: #fff; border: 1.5px solid var(--border-color); border-radius: 12px; padding: 12px; text-align: left; cursor: pointer; }
-    .menu-card:active { transform: scale(0.97); border-color: var(--primary); background: #fff7ed; }
-    .menu-name { font-weight: bold; font-size: 0.88rem; color: #111827; }
-    .menu-price { color: var(--primary); font-weight: bold; font-size: 0.85rem; margin-top: 4px; }
-
-    /* Topping Chips */
-    .topping-flex { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-    .chip { padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; border: 1px solid #d1d5db; background: #fff; cursor: pointer; color: #4b5563; font-weight: 500; }
-    .chip.active { background: var(--primary); color: white; border-color: var(--primary); }
-
-    /* Cart */
-    .cart-list { max-height: 160px; overflow-y: auto; margin-bottom: 10px; }
-    .cart-item { display: flex; justify-content: space-between; align-items: center; background: #f9fafb; padding: 8px 10px; border-radius: 8px; margin-bottom: 6px; font-size: 0.85rem; }
-    .item-del { color: #ef4444; background: none; border: none; font-weight: bold; padding: 2px 8px; cursor: pointer; font-size: 1rem; }
-
-    /* Kitchen UI */
-    .kitchen-tab-bar { display: flex; gap: 8px; margin-bottom: 12px; }
-    .sub-tab-btn { flex: 1; padding: 8px; text-align: center; font-size: 0.78rem; font-weight: bold; border-radius: 8px; background: #e5e7eb; border: none; color: #4b5563; cursor: pointer; }
-    .sub-tab-btn.active { background: var(--primary); color: white; }
-
-    .ticket-card { background: #ffffff; border: 2px solid #e5e7eb; border-radius: 12px; padding: 12px; margin-bottom: 10px; }
-    .ticket-card.status-pending { border-color: #f97316; background: #fff7ed; }
-    .ticket-card.status-doing { border-color: #3b82f6; background: #eff6ff; }
-    .ticket-card.status-done { border-color: #10b981; opacity: 0.6; }
-
-    .ticket-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #cbd5e1; padding-bottom: 6px; margin-bottom: 8px; }
-    .ticket-queue { font-size: 1.1rem; font-weight: bold; color: #111827; }
-    .ticket-time { font-size: 0.7rem; color: #6b7280; }
-
-    .ticket-item-row { margin-bottom: 6px; font-size: 0.88rem; }
-    .ticket-item-name { font-weight: bold; color: #1f2937; }
-    .ticket-topping-chip { display: inline-block; background: #fee2e2; color: #dc2626; font-size: 0.7rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; margin-top: 2px; }
-    .ticket-note-box { background: #fef08a; border-left: 3px solid #ca8a04; color: #854d0e; padding: 6px 8px; font-size: 0.75rem; font-weight: bold; border-radius: 4px; margin-top: 6px; }
-
-    .badge-status { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; }
-    .badge-pending { background: #ffedd5; color: #c2410c; }
-    .badge-doing { background: #dbeafe; color: #1e40af; }
-    .badge-done { background: #d1fae5; color: #065f46; }
-
-    .summary-item-row { display: flex; justify-content: space-between; align-items: center; background: #f9fafb; padding: 10px; border-radius: 8px; border-left: 4px solid var(--primary); margin-bottom: 6px; }
-    .summary-qty { font-size: 1.1rem; font-weight: bold; color: var(--primary); }
-
-    /* Inputs & Buttons */
-    .input-text { width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.8rem; margin-bottom: 10px; outline: none; }
-    .btn { width: 100%; padding: 11px; border-radius: 10px; font-weight: bold; font-size: 0.88rem; border: none; cursor: pointer; text-align: center; }
-    .btn-primary { background: var(--primary); color: white; }
-    .btn-primary:active { background: var(--primary-dark); }
-    .btn-danger { background: #ef4444; color: white; }
-    .btn-small { padding: 5px 10px; font-size: 0.75rem; border-radius: 6px; }
-    .btn-install { background: #10b981; color: white; font-size: 0.85rem; padding: 10px; margin-bottom: 10px; display: flex; justify-content: center; align-items: center; gap: 6px; }
-
-    /* Bottom Navigation */
-    .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; padding: 8px 0; z-index: 30; }
-    .nav-btn { background: none; border: none; color: var(--text-muted); font-size: 0.7rem; display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; width: 25%; }
-    .nav-btn.active { color: var(--primary); font-weight: bold; }
-    .nav-icon { font-size: 1.1rem; }
-
-    /* Modal */
-    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 50; padding: 16px; }
-    .modal.show { display: flex; }
-    .modal-body { background: white; border-radius: 16px; padding: 20px; width: 100%; max-width: 320px; text-align: center; }
-    .qr-box { margin: 12px auto; background: #fff; padding: 10px; border: 1px solid #e5e7eb; border-radius: 12px; }
-
-    .hidden { display: none !important; }
+    body { font-family: system-ui, -apple-system, sans-serif; }
+    .active-tab { color: #f97316; border-top: 3px solid #f97316; background-color: #fff7ed; }
   </style>
 </head>
-<body>
+<body class="bg-gray-100 min-h-screen text-gray-800 pb-24">
 
-  <!-- Header Header -->
-  <header class="app-header">
+  <!-- Header Header & Store Status -->
+  <header class="bg-orange-500 text-white p-3.5 shadow-md sticky top-0 z-50 flex justify-between items-center">
     <div>
-      <div class="store-title" id="headerStoreName">นักล่ายูนิฟอร์ม</div>
-      <div class="store-sub">ระบบ POS & ห้องครัว</div>
+      <h1 id="headerStoreName" class="text-lg font-bold leading-tight">POS นักล่ายูนิฟอร์ม</h1>
+      <p class="text-xs text-orange-100 flex items-center gap-1">
+        <span class="w-2 h-2 rounded-full bg-green-400 inline-block"></span> 
+        <span id="syncStatusText">พร้อมใช้งาน (Offline/Local)</span>
+      </p>
     </div>
-    <div class="queue-badge">
-      <span>คิวปัจจุบัน</span>
-      <strong id="displayQueueHeader">#1</strong>
-    </div>
+    <button onclick="switchTab('settings')" class="p-2 text-white hover:bg-orange-600 rounded-lg">
+      <i class="fa-solid fa-gear text-lg"></i>
+    </button>
   </header>
 
-  <!-- Content Container -->
-  <main class="container">
+  <!-- Main Content Area -->
+  <main class="p-3.5 max-w-md mx-auto space-y-4">
 
-    <!-- TAB 1: สั่งอาหาร -->
-    <section id="tabOrder">
-      <div class="card">
-        <div class="card-title">เลือกรายการอาหาร</div>
-        <div class="menu-grid" id="menuList"></div>
-
-        <div class="card-title" style="margin-top: 10px;">ท็อปปิ้ง / ตัวเลือกเสริม</div>
-        <div class="topping-flex" id="toppingList"></div>
+    <!-- 🛒 TAB 1: รับออเดอร์หน้าร้าน & คิดเงิน -->
+    <section id="tab-pos" class="tab-content">
+      <!-- Order Type & Table Selector -->
+      <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200 mb-3 flex gap-2">
+        <select id="orderType" class="bg-gray-50 border text-xs rounded-lg p-2 font-bold w-1/2">
+          <option value="ทานที่ร้าน">🍽️ ทานที่ร้าน</option>
+          <option value="ใส่กล่อง/กลับบ้าน">📦 ใส่กล่อง/กลับบ้าน</option>
+        </select>
+        <input type="text" id="tableNo" placeholder="เลขโต๊ะ / ชื่อคิว" class="bg-gray-50 border text-xs rounded-lg p-2 w-1/2">
       </div>
 
-      <div class="card">
-        <div class="card-title">
-          <span>รายการสั่งซื้อ</span>
-          <button onclick="clearCart()" style="color:#ef4444; border:none; background:none; font-size:0.75rem; cursor:pointer;">ล้างตะกร้า</button>
-        </div>
+      <!-- Menu Grid -->
+      <div class="flex justify-between items-center mb-2">
+        <span class="font-bold text-xs text-gray-600">เมนูอาหาร</span>
+        <span class="text-xs text-orange-600 cursor-pointer font-bold" onclick="showHeldOrders()">บิลที่พักไว้ (<span id="heldCount">0</span>)</span>
+      </div>
+      <div id="posMenuGrid" class="grid grid-cols-2 gap-2.5 mb-4"></div>
 
-        <div class="cart-list" id="cartItems"></div>
-
-        <input type="text" id="orderNote" class="input-text" placeholder="ระบุโน้ตเพิ่มเติม (เช่น ไม่เผ็ด, แยกซอส)...">
-
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; padding-top:10px; border-top:1px solid #eee;">
-          <div>
-            <div style="font-size:0.75rem; color:#6b7280;">ราคารวมทั้งสิ้น</div>
-            <div id="cartTotal" style="font-size:1.25rem; font-weight:bold; color:var(--primary);">0 B.</div>
+      <!-- Cart Section -->
+      <div class="bg-white p-3.5 rounded-xl shadow-sm border border-gray-200">
+        <div class="flex justify-between items-center border-b pb-2 mb-2">
+          <span class="font-bold text-gray-700 text-xs">ตะกร้าออเดอร์</span>
+          <div class="flex gap-2">
+            <button onclick="holdCurrentOrder()" class="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded font-bold">พักบิล</button>
+            <button onclick="clearCart()" class="text-xs text-red-500 hover:underline">ล้าง</button>
           </div>
-          <button onclick="checkout()" class="btn btn-primary" style="width: auto; padding: 10px 20px;">ยืนยัน & รับเงิน</button>
         </div>
+        
+        <div id="cartItems" class="space-y-2 mb-3 max-h-36 overflow-y-auto text-xs"></div>
+        
+        <div class="border-t pt-2 space-y-1">
+          <div class="flex justify-between font-bold text-sm">
+            <span>รวมทั้งสิ้น:</span>
+            <span id="cartTotal" class="text-orange-600">฿0</span>
+          </div>
+        </div>
+
+        <button onclick="checkout()" class="w-full bg-orange-500 text-white font-bold py-3 rounded-xl mt-3 shadow-md hover:bg-orange-600 transition flex items-center justify-center gap-2 text-xs">
+          <i class="fa-solid fa-print"></i> บันทึกขาย, ออกสลิป & ตัดสต็อค
+        </button>
       </div>
     </section>
 
-    <!-- TAB 2: โหมดครัว -->
-    <section id="tabKitchen" class="hidden">
-      <div class="kitchen-tab-bar">
-        <button onclick="switchKitchenSubTab('tickets')" id="subTabTicketsBtn" class="sub-tab-btn active">🎫 บัตรคิวรายออเดอร์</button>
-        <button onclick="switchKitchenSubTab('summary')" id="subTabSummaryBtn" class="sub-tab-btn">📊 สรุปยอดรวมเมนู</button>
-      </div>
-
-      <div id="kitchenTicketsView">
-        <div id="kitchenTicketsContainer"></div>
-      </div>
-
-      <div id="kitchenSummaryView" class="hidden">
-        <div class="card">
-          <div class="card-title">รายการอาหารค้างทำทั้งหมด (Batch)</div>
-          <div id="kitchenSummaryContainer" style="font-size:0.85rem;"></div>
+    <!-- 📦 TAB 2: คลังวัตถุดิบ, BOM ต้นทุน & ตัดยอดเสีย -->
+    <section id="tab-stock" class="tab-content hidden space-y-4">
+      <!-- Stock & Waste Header -->
+      <div class="bg-white p-3.5 rounded-xl shadow-sm border border-gray-200">
+        <div class="flex justify-between items-center mb-3">
+          <h2 class="text-xs font-bold text-gray-700 flex items-center gap-1.5">
+            <i class="fa-solid fa-boxes-stacked text-orange-500"></i> คลังวัตถุดิบ & ตัดยอดเสีย
+          </h2>
+          <button onclick="addIngredient()" class="bg-orange-500 text-white text-xs px-2 py-1 rounded-lg font-bold">+ วัตถุดิบใหม่</button>
         </div>
+        <div id="stockList" class="space-y-2"></div>
+      </div>
+
+      <!-- BOM Costing & Margin Section -->
+      <div class="bg-white p-3.5 rounded-xl shadow-sm border border-gray-200">
+        <h2 class="text-xs font-bold text-gray-700 mb-2 flex items-center gap-1.5">
+          <i class="fa-solid fa-calculator text-orange-500"></i> คำนวณต้นทุน BOM & % กำไร
+        </h2>
+        <div id="bomMenuList" class="space-y-2"></div>
+      </div>
+    </section>
+    
+ <!-- 📊 TAB 3: รายงานยอดขาย & สรุปกำไรขั้นต้น -->
+    <section id="tab-reports" class="tab-content hidden space-y-3">
+      <h2 class="text-xs font-bold text-gray-700 flex items-center gap-1.5">
+        <i class="fa-solid fa-chart-pie text-orange-500"></i> รายงานสรุปการขาย & ยอดเสีย
+      </h2>
+      
+      <div class="grid grid-cols-3 gap-2">
+        <div class="bg-white p-2.5 rounded-xl shadow-sm border border-gray-200 text-center">
+          <p class="text-[10px] text-gray-400 font-bold">ยอดขายรวม</p>
+          <p id="rptSales" class="text-sm font-bold text-green-600">฿0</p>
+        </div>
+        <div class="bg-white p-2.5 rounded-xl shadow-sm border border-gray-200 text-center">
+          <p class="text-[10px] text-gray-400 font-bold">กำไรขั้นต้นรวม</p>
+          <p id="rptGrossProfit" class="text-sm font-bold text-blue-600">฿0</p>
+        </div>
+        <div class="bg-white p-2.5 rounded-xl shadow-sm border border-gray-200 text-center">
+          <p class="text-[10px] text-gray-400 font-bold">ต้นทุนยอดเสีย</p>
+          <p id="rptWasteTotal" class="text-sm font-bold text-red-500">฿0</p>
+        </div>
+      </div>
+
+      <!-- Sales History -->
+      <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200">
+        <h3 class="font-bold text-xs text-gray-600 mb-2">ประวัติการขายล่าสุด</h3>
+        <div id="salesHistory" class="space-y-2 text-xs max-h-48 overflow-y-auto"></div>
+      </div>
+
+      <!-- Waste Log -->
+      <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200">
+        <h3 class="font-bold text-xs text-red-600 mb-2">ประวัติการบันทึกยอดเสีย (Waste Log)</h3>
+        <div id="wasteHistory" class="space-y-2 text-xs max-h-36 overflow-y-auto"></div>
       </div>
     </section>
 
-    <!-- TAB 3: ยอดขาย -->
-    <section id="tabSales" class="hidden">
-      <div class="card">
-        <div class="card-title">สรุปยอดขายประจำวัน</div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; text-align:center; margin-top:8px;">
-          <div style="background:#fff7ed; padding:12px; border-radius:10px;">
-            <div style="font-size:0.72rem; color:#6b7280;">ยอดขายรวม</div>
-            <div id="totalRevenue" style="font-size:1.2rem; font-weight:bold; color:var(--primary);">0 B.</div>
-          </div>
-          <div style="background:#eff6ff; padding:12px; border-radius:10px;">
-            <div style="font-size:0.72rem; color:#6b7280;">จำนวนออเดอร์</div>
-            <div id="totalOrdersCount" style="font-size:1.2rem; font-weight:bold; color:#2563eb;">0</div>
-          </div>
+    <!-- ⚙️ TAB 4: ตั้งค่าแอป & การเชื่อมต่อ multi-device -->
+    <section id="tab-settings" class="tab-content hidden space-y-3">
+      <div class="bg-white p-3.5 rounded-xl shadow-sm border border-gray-200 space-y-3 text-xs">
+        <h2 class="font-bold text-gray-700 flex items-center gap-1.5 border-b pb-2">
+          <i class="fa-solid fa-sliders text-orange-500"></i> ตั้งค่าข้อมูลร้าน & ฮาร์ดแวร์
+        </h2>
+        
+        <div>
+          <label class="block font-bold text-gray-600 mb-1">ชื่อร้านอาหาร</label>
+          <input type="text" id="cfgStoreName" class="w-full bg-gray-50 border rounded-lg p-2">
         </div>
-      </div>
 
-      <div class="card">
-        <div class="card-title">ประวัติรายการขาย</div>
-        <div id="salesHistory" style="font-size:0.8rem; max-height:280px; overflow-y:auto;"></div>
-      </div>
-    </section>
-       <!-- TAB 4: ตั้งค่า & ติดตั้ง PWA -->
-    <section id="tabSettings" class="hidden">
-      <!-- ปุ่มกดติดตั้ง PWA -->
-      <div class="card" style="background:#ecfdf5; border-color:#a7f3d0;">
-        <div class="card-title" style="color:#065f46;">ติดตั้งแอปพลิเคชันลงเครื่อง</div>
-        <p style="font-size:0.75rem; color:#047857; margin-bottom:10px;">กดปุ่มด้านล่างเพื่อติดตั้งแอป POS นี้ลงในหน้าจอโฮมและ App Drawer ของมือถือ</p>
-        <button onclick="installPWA()" id="pwaInstallBtn" class="btn btn-install">📲 กดติดตั้งแอป POS ทันที</button>
-      </div>
+        <div>
+          <label class="block font-bold text-gray-600 mb-1">ข้อความท้ายใบเสร็จ</label>
+          <input type="text" id="cfgReceiptFooter" class="w-full bg-gray-50 border rounded-lg p-2">
+        </div>
 
-      <div class="card">
-        <div class="card-title">ข้อมูลร้าน & PromptPay</div>
-        <div style="margin-bottom:8px;">
-          <label style="font-size:0.75rem; color:#4b5563;">ชื่อร้าน</label>
-          <input type="text" id="settingStoreName" class="input-text">
+        <div>
+          <label class="block font-bold text-gray-600 mb-1">สถานะการเชื่อมต่อหลายเครื่อง (Multi-Device)</label>
+          <select id="cfgSyncMode" class="w-full bg-gray-50 border rounded-lg p-2 font-bold">
+            <option value="local">ทำงานเฉพาะในเครื่อง (Offline Mode)</option>
+            <option value="firebase">เชื่อมต่อ Firebase Realtime DB (เปิดหลายเครื่อง)</option>
+          </select>
         </div>
-        <div style="margin-bottom:8px;">
-          <label style="font-size:0.75rem; color:#4b5563;">เบอร์ PromptPay (สำหรับสร้าง QR)</label>
-          <input type="text" id="settingPromptpay" class="input-text">
-        </div>
-        <button onclick="saveStoreSettings()" class="btn btn-primary" style="font-size:0.8rem; padding:8px;">บันทึกข้อมูลร้าน</button>
-      </div>
 
-      <div class="card">
-        <div class="card-title">จัดการลำดับคิว</div>
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-size:0.8rem;">คิวปัจจุบัน: <b id="settingCurrentQueue">1</b></span>
-          <button onclick="resetQueue()" class="btn btn-danger btn-small" style="width:auto;">รีเซ็ตคิวเริ่มที่ #1</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title" style="display:flex; justify-content:space-between;">
-          <span>จัดการเมนูอาหาร</span>
-          <button onclick="addNewMenu()" class="btn btn-primary btn-small" style="width:auto;">+ เพิ่มเมนู</button>
-        </div>
-        <div id="settingMenuList" style="font-size:0.8rem;"></div>
+        <button onclick="saveSettings()" class="w-full bg-gray-800 text-white font-bold py-2.5 rounded-lg">
+          บันทึกการตั้งค่า
+        </button>
       </div>
     </section>
 
   </main>
 
-  <!-- Modal สแกนจ่าย PromptPay -->
-  <div id="paymentModal" class="modal">
-    <div class="modal-body">
-      <div style="font-size:0.75rem; color:#6b7280;">สแกนชำระเงิน</div>
-      <div id="modalQueueNumber" style="font-size:1.5rem; font-weight:bold; color:var(--primary);">คิวที่ #1</div>
-      
-      <div class="qr-box">
-        <img id="qrImage" src="" alt="PromptPay QR" style="width:160px; height:160px; display:block; margin:0 auto;" />
-      </div>
-      
-      <div style="margin-bottom:12px;">
-        <div style="font-size:0.75rem; color:#6b7280;">ยอดชำระทั้งสิ้น</div>
-        <div id="modalTotalAmount" style="font-size:1.5rem; font-weight:bold; color:#111827;">0 B.</div>
-        <div style="font-size:0.7rem; color:#9ca3af; margin-top:2px;">พร้อมเพย์: <span id="modalPromptpayNo"></span></div>
-      </div>
-
-      <button onclick="confirmPaymentSuccess()" class="btn btn-primary" style="background:#10b981; margin-bottom:8px;">รับเงินเรียบร้อย (ส่งเข้าครัว)</button>
-      <button onclick="closePaymentModal()" class="btn" style="font-size:0.8rem; padding:8px; border:none; background:none; color:#6b7280; width:100%;">ย้อนกลับ</button>
-    </div>
-  </div>
-
-  <!-- Bottom Navigation Bar -->
-  <nav class="nav-bar">
-    <button onclick="switchTab('tabOrder')" id="navOrder" class="nav-btn active">
-      <span class="nav-icon">🛒</span>
-      <span>สั่งอาหาร</span>
+  <!-- Bottom Navigation -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around shadow-lg z-50 text-[11px]">
+    <button onclick="switchTab('pos')" id="nav-pos" class="flex flex-col items-center py-2 active-tab w-full font-bold">
+      <i class="fa-solid fa-store text-base mb-0.5"></i> หน้าร้าน
     </button>
-    <button onclick="switchTab('tabKitchen')" id="navKitchen" class="nav-btn">
-      <span class="nav-icon">👨‍🍳</span>
-      <span>ครัว</span>
+    <button onclick="switchTab('stock')" id="nav-stock" class="flex flex-col items-center py-2 text-gray-500 w-full font-bold">
+      <i class="fa-solid fa-boxes-stacked text-base mb-0.5"></i> คลัง/BOM
     </button>
-    <button onclick="switchTab('tabSales')" id="navSales" class="nav-btn">
-      <span class="nav-icon">📊</span>
-      <span>ยอดขาย</span>
+    <button onclick="switchTab('reports')" id="nav-reports" class="flex flex-col items-center py-2 text-gray-500 w-full font-bold">
+      <i class="fa-solid fa-chart-pie text-base mb-0.5"></i> สรุปผล
     </button>
-    <button onclick="switchTab('tabSettings')" id="navSettings" class="nav-btn">
-      <span class="nav-icon">⚙️</span>
-      <span>ตั้งค่า</span>
+    <button onclick="switchTab('settings')" id="nav-settings" class="flex flex-col items-center py-2 text-gray-500 w-full font-bold">
+      <i class="fa-solid fa-gear text-base mb-0.5"></i> ตั้งค่า
     </button>
   </nav>
 
-  <!-- JavaScript -->
+  <!-- Core JavaScript Application Logic -->
   <script>
-    // --- PWA Auto Registration Engine ---
-    const manifestData = {
-      "name": "นักล่ายูนิฟอร์ม POS",
-      "short_name": "นักล่ายูนิฟอร์ม",
-      "start_url": "./",
-      "display": "standalone",
-      "background_color": "#ffffff",
-      "theme_color": "#f97316",
-      "icons": [
-        {
-          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%23f97316'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' font-size='280' fill='white'>🛒</text></svg>",
-          "sizes": "512x512",
-          "type": "image/svg+xml",
-          "purpose": "any maskable"
-        }
-      ]
-    };
-    const manifestBlob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
-    document.getElementById('manifest-link').setAttribute('href', URL.createObjectURL(manifestBlob));
-
-    let deferredPrompt;
-    if ('serviceWorker' in navigator) {
-      const swCode = `
-        self.addEventListener('install', (e) => { self.skipWaiting(); });
-        self.addEventListener('activate', (e) => { e.waitUntil(clients.claim()); });
-        self.addEventListener('fetch', (e) => { e.respondWith(fetch(e.request).catch(() => caches.match(e.request))); });
-      `;
-      const swBlob = new Blob([swCode], { type: 'application/javascript' });
-      navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
-    }
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-    });
-
-    function installPWA() {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choice) => {
-          if (choice.outcome === 'accepted') {
-            alert('กำลังทำการติดตั้งแอปพลิเคชันลงในเครื่องค่ะ');
-          }
-          deferredPrompt = null;
-        });
-      } else {
-        alert('ระบบพร้อมสำหรับการติดตั้งแล้วค่ะ โจสามารถกดจุด 3 จุด (⋮) ใน Chrome แล้วเลือก "ติดตั้งแอป" ได้ทันทีเลยนะคะ');
-      }
-    }
-
-    /* POS Core Logic */
     const defaultData = {
-      storeName: "นักล่ายูนิฟอร์ม",
-      promptpay: "0973383488",
-      currentQueue: 1,
+      settings: {
+        storeName: 'POS นักล่ายูนิฟอร์ม',
+        receiptFooter: 'ขอบคุณที่อุดหนุนค่ะ!',
+        syncMode: 'local'
+      },
+      ingredients: [
+        { id: 'ing1', name: 'เนื้อวัวซูวี', brand: 'ออสเตรเลีย', purchasePrice: 350, totalQtyG: 1000, qty: 2000, unit: 'g' },
+        { id: 'ing2', name: 'ข้าวหอมมะลิ', brand: 'หงษ์ทอง', purchasePrice: 180, totalQtyG: 5000, qty: 5000, unit: 'g' },
+        { id: 'ing3', name: 'กล่องอาหาร', brand: 'Fest', purchasePrice: 150, totalQtyG: 50, qty: 50, unit: 'ใบ' }
+      ],
       menus: [
-        { id: 1, name: "Pocket Tori Nanban", price: 59 },
-        { id: 2, name: "Pocket Karaage", price: 49 }
+        { 
+          id: 'm1', name: 'ข้าวเนื้อวัวซูวีผัดกระเพรา', price: 89, 
+          recipe: [{ ingId: 'ing1', qty: 100 }, { ingId: 'ing2', qty: 150 }, { ingId: 'ing3', qty: 1 }]
+        },
+        { 
+          id: 'm2', name: 'ข้าวกล่องเนื้อย่างเกลือ', price: 79, 
+          recipe: [{ ingId: 'ing1', qty: 100 }, { ingId: 'ing2', qty: 150 }, { ingId: 'ing3', qty: 1 }]
+        }
       ],
-      toppings: [
-        { id: 101, name: "cheese dip", price: 10 }
-      ],
-      orders: []
+      cart: [],
+      heldOrders: [],
+      sales: [],
+      wastes: []
     };
 
-    let appData = JSON.parse(localStorage.getItem('pos_app_data')) || defaultData;
-    let cart = [];
-    let selectedToppings = [];
+    let db = JSON.parse(localStorage.getItem('JO_FULL_POS_DB')) || defaultData;
 
     function saveData() {
-      localStorage.setItem('pos_app_data', JSON.stringify(appData));
+      localStorage.setItem('JO_FULL_POS_DB', JSON.stringify(db));
       renderAll();
     }
 
-    function renderAll() {
-      document.getElementById('headerStoreName').innerText = appData.storeName;
-      document.getElementById('displayQueueHeader').innerText = '#' + appData.currentQueue;
-      document.getElementById('settingStoreName').value = appData.storeName;
-      document.getElementById('settingPromptpay').value = appData.promptpay;
-      document.getElementById('settingCurrentQueue').innerText = appData.currentQueue;
-      
-      renderMenus();
-      renderToppings();
-      renderCart();
-      renderKitchen();
-      renderSales();
-      renderSettingsMenu();
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('nav button').forEach(el => el.classList.remove('active-tab'));
+      document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+      const navBtn = document.getElementById(`nav-${tabName}`);
+      if (navBtn) navBtn.classList.add('active-tab');
+      renderAll();
     }
 
-    function renderMenus() {
-      const container = document.getElementById('menuList');
-      container.innerHTML = appData.menus.map(m => `
-        <div onclick="addToCart(${m.id})" class="menu-card">
-          <div class="menu-name">${m.name}</div>
-          <div class="menu-price">${m.price} B.</div>
-        </div>
-      `).join('');
+    
+    // Helper: Compute unit cost per gram/piece
+    function getIngUnitCost(ing) {
+      return ing.totalQtyG > 0 ? (ing.purchasePrice / ing.totalQtyG) : 0;
     }
 
-    function renderToppings() {
-      const container = document.getElementById('toppingList');
-      container.innerHTML = appData.toppings.map(t => {
-        const isSelected = selectedToppings.includes(t.id);
+    // Helper: Compute total BOM cost of a menu item
+    function getMenuCost(menu) {
+      if (!menu.recipe || menu.recipe.length === 0) return 0;
+      return menu.recipe.reduce((total, r) => {
+        const ing = db.ingredients.find(i => i.id === r.ingId);
+        return total + (ing ? (r.qty * getIngUnitCost(ing)) : 0);
+      }, 0);
+    }
+
+    function renderPOS() {
+      document.getElementById('headerStoreName').innerText = db.settings.storeName;
+      document.getElementById('heldCount').innerText = db.heldOrders.length;
+
+      const menuGrid = document.getElementById('posMenuGrid');
+      menuGrid.innerHTML = db.menus.map(menu => {
+        const cost = getMenuCost(menu);
+        const margin = menu.price > 0 ? (((menu.price - cost) / menu.price) * 100).toFixed(0) : 0;
         return `
-          <div onclick="toggleTopping(${t.id})" class="chip ${isSelected ? 'active' : ''}">
-            + ${t.name} (${t.price} B.)
+          <div onclick="addToCart('${menu.id}')" class="bg-white p-3 rounded-xl shadow-sm border border-gray-200 cursor-pointer active:scale-95 transition">
+            <div class="font-bold text-xs text-gray-800">${menu.name}</div>
+            <div class="flex justify-between items-center mt-1.5">
+              <span class="text-orange-600 font-bold text-sm">฿${menu.price}</span>
+              <span class="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold">GP ${margin}%</span>
+            </div>
           </div>
         `;
       }).join('');
-    }
 
-    function toggleTopping(id) {
-      if (selectedToppings.includes(id)) {
-        selectedToppings = selectedToppings.filter(item => item !== id);
-      } else {
-        selectedToppings.push(id);
-      }
-      renderToppings();
-    }
-
-    function addToCart(menuId) {
-      const menu = appData.menus.find(m => m.id === menuId);
-      const chosenToppings = appData.toppings.filter(t => selectedToppings.includes(t.id));
-      const toppingCost = chosenToppings.reduce((sum, t) => sum + t.price, 0);
-      const toppingNames = chosenToppings.map(t => t.name).join(', ');
-
-      cart.push({
-        name: menu.name,
-        toppings: toppingNames,
-        totalItemPrice: menu.price + toppingCost
-      });
-
-      selectedToppings = [];
-      renderToppings();
-      renderCart();
-    }
-   
-    function renderCart() {
-      const container = document.getElementById('cartItems');
-      if (cart.length === 0) {
-        container.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:12px 0;">ยังไม่มีรายการในตะกร้า</div>';
-        document.getElementById('cartTotal').innerText = '0 B.';
+      const cartContainer = document.getElementById('cartItems');
+      if (db.cart.length === 0) {
+        cartContainer.innerHTML = `<p class="text-gray-400 text-center py-2">ไม่มีรายการในตะกร้า</p>`;
+        document.getElementById('cartTotal').innerText = '฿0';
         return;
       }
 
       let total = 0;
-      container.innerHTML = cart.map((item, index) => {
-        total += item.totalItemPrice;
+      cartContainer.innerHTML = db.cart.map((item, index) => {
+        const itemTotal = item.price * item.qty;
+        total += itemTotal;
         return `
-          <div class="cart-item">
+          <div class="flex justify-between items-center py-1 border-b border-gray-100">
             <div>
-              <b>${item.name}</b>
-              ${item.toppings ? `<div style="font-size:0.7rem; color:var(--primary);">+ ${item.toppings}</div>` : ''}
+              <div class="font-semibold">${item.name}</div>
+              <div class="text-[10px] text-gray-400">฿${item.price} x ${item.qty}</div>
             </div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold">฿${itemTotal}</span>
+              <button onclick="removeFromCart(${index})" class="text-red-400 text-xs"><i class="fa-solid fa-trash"></i></button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      document.getElementById('cartTotal').innerText = `฿${total}`;
+    }
+
+    function addToCart(menuId) {
+      const menu = db.menus.find(m => m.id === menuId);
+      const existing = db.cart.find(c => c.id === menuId);
+      if (existing) existing.qty += 1;
+      else db.cart.push({ id: menu.id, name: menu.name, price: menu.price, qty: 1 });
+      saveData();
+    }
+
+    function removeFromCart(index) {
+      db.cart.splice(index, 1);
+      saveData();
+    }
+
+    function clearCart() {
+      db.cart = [];
+      saveData();
+    }
+
+    function holdCurrentOrder() {
+      if (db.cart.length === 0) return alert('ไม่มีรายการในตะกร้าที่จะพักไว้ค่ะ');
+      const table = document.getElementById('tableNo').value || 'ไม่ระบุโต๊ะ';
+      const type = document.getElementById('orderType').value;
+      db.heldOrders.push({
+        id: 'HOLD-' + Date.now().toString().slice(-4),
+        type: type,
+        table: table,
+        items: [...db.cart]
+      });
+      db.cart = [];
+      document.getElementById('tableNo').value = '';
+      alert('📌 พักบิลเรียบร้อยแล้วค่ะ');
+      saveData();
+    }
+
+    function showHeldOrders() {
+      if (db.heldOrders.length === 0) return alert('ไม่มีบิลที่พักไว้ค่ะ');
+      let msg = 'รายการบิลที่พักไว้:\n';
+      db.heldOrders.forEach((h, i) => {
+        msg += `${i + 1}. [${h.id}] โต๊ะ/คิว: ${h.table} (${h.items.length} รายการ)\n`;
+      });
+      const choice = prompt(msg + '\nพิมพ์หมายเลขบิลที่ต้องการเรียกกลับมาทำต่อ:');
+      if (choice) {
+        const idx = parseInt(choice) - 1;
+        if (db.heldOrders[idx]) {
+          db.cart = db.heldOrders[idx].items;
+          db.heldOrders.splice(idx, 1);
+          saveData();
+        }
+      }
+    }
+
+    
+    function checkout() {
+      if (db.cart.length === 0) return alert('กรุณาเลือกรายการอาหารก่อนค่ะ');
+
+      let stockError = false;
+      let errorMsg = '';
+
+      db.cart.forEach(cartItem => {
+        const menu = db.menus.find(m => m.id === cartItem.id);
+        if (menu && menu.recipe) {
+          menu.recipe.forEach(r => {
+            const ing = db.ingredients.find(i => i.id === r.ingId);
+            const reqQty = r.qty * cartItem.qty;
+            if (ing && ing.qty < reqQty) {
+              stockError = true;
+              errorMsg += `\n- ${ing.name} ขาดอีก ${reqQty - ing.qty}${ing.unit}`;
+            }
+          });
+        }
+      });
+
+      if (stockError) return alert('❌ สต็อคไม่พอตัดออเดอร์:' + errorMsg);
+
+      let totalCost = 0;
+      db.cart.forEach(cartItem => {
+        const menu = db.menus.find(m => m.id === cartItem.id);
+        if (menu && menu.recipe) {
+          totalCost += getMenuCost(menu) * cartItem.qty;
+          menu.recipe.forEach(r => {
+            const ing = db.ingredients.find(i => i.id === r.ingId);
+            if (ing) ing.qty -= r.qty * cartItem.qty;
+          });
+        }
+      });
+
+      const totalAmount = db.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+      const table = document.getElementById('tableNo').value || 'ทั่วไป';
+      const type = document.getElementById('orderType').value;
+
+      db.sales.unshift({
+        id: 'ORD-' + Date.now().toString().slice(-4),
+        time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+        type: type,
+        table: table,
+        items: [...db.cart],
+        total: totalAmount,
+        cost: totalCost,
+        profit: totalAmount - totalCost
+      });
+
+      db.cart = [];
+      document.getElementById('tableNo').value = '';
+      alert(`✅ บันทึกการขายสำเร็จ!\nยอดรวม: ฿${totalAmount}\nตัดสต็อคเรียบร้อยแล้วค่ะ`);
+      saveData();
+    }
+
+    function renderStock() {
+      const stockList = document.getElementById('stockList');
+      stockList.innerHTML = db.ingredients.map(ing => {
+        const unitCost = getIngUnitCost(ing).toFixed(2);
+        return `
+          <div class="bg-gray-50 p-2.5 rounded-lg border border-gray-200 text-xs flex justify-between items-center">
             <div>
-              <b>${item.totalItemPrice} B.</b>
-              <button onclick="removeFromCart(${index})" class="item-del">✕</button>
+              <div class="font-bold text-gray-800">${ing.name} <span class="text-gray-400 font-normal">(${ing.brand})</span></div>
+              <div class="text-gray-500">คงเหลือ: <span class="font-bold ${ing.qty < 500 ? 'text-red-500' : 'text-green-600'}">${ing.qty} ${ing.unit}</span> | ต้นทุน ฿${unitCost}/${ing.unit}</div>
+            </div>
+            <div class="flex gap-1">
+              <button onclick="logWaste('${ing.id}')" class="bg-red-100 text-red-700 px-2 py-1 rounded font-bold">ตัดยอดเสีย</button>
+              <button onclick="restock('${ing.id}')" class="bg-green-100 text-green-700 px-2 py-1 rounded font-bold">+ เติม</button>
             </div>
           </div>
         `;
       }).join('');
 
-      document.getElementById('cartTotal').innerText = total + ' B.';
-    }
-
-    function removeFromCart(index) {
-      cart.splice(index, 1);
-      renderCart();
-    }
-
-    function clearCart() {
-      cart = [];
-      selectedToppings = [];
-      document.getElementById('orderNote').value = '';
-      renderToppings();
-      renderCart();
-    }
-
-    function checkout() {
-      if (cart.length === 0) {
-        alert('กรุณาเลือกรายการอาหารก่อนรับเงินค่ะ');
-        return;
-      }
-      const totalAmount = cart.reduce((sum, item) => sum + item.totalItemPrice, 0);
-      document.getElementById('modalQueueNumber').innerText = 'คิวที่ #' + appData.currentQueue;
-      document.getElementById('modalTotalAmount').innerText = totalAmount + ' B.';
-      document.getElementById('modalPromptpayNo').innerText = appData.promptpay;
-      document.getElementById('qrImage').src = `https://promptpay.io/${appData.promptpay}/${totalAmount}.png`;
-
-      document.getElementById('paymentModal').classList.add('show');
-    }
-
-    function confirmPaymentSuccess() {
-      const totalAmount = cart.reduce((sum, item) => sum + item.totalItemPrice, 0);
-      const note = document.getElementById('orderNote').value;
-
-      appData.orders.unshift({
-        id: Date.now(),
-        queue: appData.currentQueue,
-        time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
-        items: cart.map(i => ({ name: i.name, toppings: i.toppings, price: i.totalItemPrice })),
-        total: totalAmount,
-        note: note,
-        status: 'pending'
-      });
-
-      appData.currentQueue += 1;
-      saveData();
-      clearCart();
-      closePaymentModal();
-    }
-
-    function closePaymentModal() {
-      document.getElementById('paymentModal').classList.remove('show');
-    }
-
-    function renderKitchen() {
-      const ticketsContainer = document.getElementById('kitchenTicketsContainer');
-      const summaryContainer = document.getElementById('kitchenSummaryContainer');
-
-      if (appData.orders.length === 0) {
-        ticketsContainer.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:30px 0;">ยังไม่มีออเดอร์ในระบบ</div>';
-      } else {
-        ticketsContainer.innerHTML = appData.orders.map(o => {
-          let statusBadgeClass = 'badge-pending';
-          let statusText = '⏳ รอทำ';
-          let cardStatusClass = 'status-pending';
-          let actionBtnHtml = `<button onclick="updateOrderStatus(${o.id}, 'doing')" class="btn btn-primary" style="padding:6px; font-size:0.75rem; background:#3b82f6;">🔥 เริ่มทำคิวนี้</button>`;
-
-          if (o.status === 'doing') {
-            statusBadgeClass = 'badge-doing';
-            statusText = '🔥 กำลังทำ';
-            cardStatusClass = 'status-doing';
-            actionBtnHtml = `<button onclick="updateOrderStatus(${o.id}, 'done')" class="btn btn-primary" style="padding:6px; font-size:0.75rem; background:#10b981;">✅ ปรุงเสร็จแล้ว</button>`;
-          } else if (o.status === 'done') {
-            statusBadgeClass = 'badge-done';
-            statusText = '✅ เสร็จแล้ว';
-            cardStatusClass = 'status-done';
-            actionBtnHtml = `<button onclick="updateOrderStatus(${o.id}, 'doing')" class="btn" style="padding:4px; font-size:0.7rem; background:#e5e7eb; color:#4b5563;">ย้อนกลับ</button>`;
-          }
-
-          return `
-            <div class="ticket-card ${cardStatusClass}">
-              <div class="ticket-header">
-                <div>
-                  <span class="ticket-queue">คิว #${o.queue}</span>
-                  <span class="ticket-time">(${o.time})</span>
-                </div>
-                <span class="badge-status ${statusBadgeClass}">${statusText}</span>
-              </div>
-
-              <div style="margin-bottom:8px;">
-                ${o.items.map(i => `
-                  <div class="ticket-item-row">
-                    <span class="ticket-item-name">• ${i.name}</span>${i.toppings ? `<br/><span class="ticket-topping-chip">+ ${i.toppings}</span>` : ''}
-                  </div>
-                `).join('')}
-              </div>
-
-              ${o.note ? `<div class="ticket-note-box">⚠️ หมายเหตุ: ${o.note}</div>` : ''}
-
-              <div style="margin-top:10px; text-align:right;">
-                ${actionBtnHtml}
-              </div>
+      const bomList = document.getElementById('bomMenuList');
+      bomList.innerHTML = db.menus.map(menu => {
+        const cost = getMenuCost(menu);
+        const margin = menu.price > 0 ? (((menu.price - cost) / menu.price) * 100).toFixed(1) : 0;
+        return `
+          <div class="bg-gray-50 p-2.5 rounded-lg border border-gray-200 text-xs">
+            <div class="flex justify-between font-bold">
+              <span class="text-orange-600">${menu.name}</span>
+              <span class="text-gray-700">ราคาขาย: ฿${menu.price}</span>
             </div>
-          `;
-        }).join('');
-      }
-
-      const activeOrders = appData.orders.filter(o => o.status !== 'done');
-      if (activeOrders.length === 0) {
-        summaryContainer.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px 0;">ไม่มีเมนูค้างทำในขณะนี้</div>';
-      } else {
-        const itemCounts = {};
-        const toppingCounts = {};
-
-        activeOrders.forEach(o => {
-          o.items.forEach(i => {
-            itemCounts[i.name] = (itemCounts[i.name] || 0) + 1;
-            if (i.toppings) {
-              toppingCounts[i.toppings] = (toppingCounts[i.toppings] || 0) + 1;
-            }
-          });
-        });
-
-        let summaryHtml = '<div style="font-weight:bold; color:#4b5563; margin-bottom:6px;">รายการอาหารหลัก:</div>';
-        for (const [name, qty] of Object.entries(itemCounts)) {
-          summaryHtml += `
-            <div class="summary-item-row">
-              <span style="font-weight:bold;">${name}</span>
-              <span class="summary-qty">${qty} จาน</span>
+            <div class="text-gray-500 my-1 font-mono text-[11px]">
+              ต้นทุน BOM: <span class="text-red-500 font-bold">฿${cost.toFixed(2)}</span> | กำไรขั้นต้น: <span class="text-green-600 font-bold">฿${(menu.price - cost).toFixed(2)} (${margin}%)</span>
             </div>
-          `;
-        }
-
-        if (Object.keys(toppingCounts).length > 0) {
-          summaryHtml += '<div style="font-weight:bold; color:#4b5563; margin-top:10px; margin-bottom:6px;">ท็อปปิ้งรวม:</div>';
-          for (const [topName, topQty] of Object.entries(toppingCounts)) {
-            summaryHtml += `
-              <div class="summary-item-row" style="border-left-color:#ef4444; background:#fff5f5;">
-                <span style="font-weight:bold; color:#dc2626;">+ ${topName}</span>
-                <span class="summary-qty" style="color:#dc2626;">${topQty} ชุด</span>
-              </div>
-            `;
-          }
-        }
-
-        summaryContainer.innerHTML = summaryHtml;
-      }
-    }
-
-    function updateOrderStatus(orderId, newStatus) {
-      const order = appData.orders.find(o => o.id === orderId);
-      if (order) {
-        order.status = newStatus;
-        saveData();
-      }
-    }
-
-    function switchKitchenSubTab(tab) {
-      if (tab === 'tickets') {
-        document.getElementById('kitchenTicketsView').classList.remove('hidden');
-        document.getElementById('kitchenSummaryView').classList.add('hidden');
-        document.getElementById('subTabTicketsBtn').classList.add('active');
-        document.getElementById('subTabSummaryBtn').classList.remove('active');
-      } else {
-        document.getElementById('kitchenTicketsView').classList.add('hidden');
-        document.getElementById('kitchenSummaryView').classList.remove('hidden');
-        document.getElementById('subTabTicketsBtn').classList.remove('active');
-        document.getElementById('subTabSummaryBtn').classList.add('active');
-      }
-    }
-
-    function renderSales() {
-      const totalRev = appData.orders.reduce((sum, o) => sum + o.total, 0);
-      document.getElementById('totalRevenue').innerText = totalRev + ' B.';
-      document.getElementById('totalOrdersCount').innerText = appData.orders.length;
-
-      const historyContainer = document.getElementById('salesHistory');
-      if (appData.orders.length === 0) {
-        historyContainer.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px 0;">ยังไม่มีประวัติการขายวันนี้</div>';
-        return;
-      }
-
-      historyContainer.innerHTML = appData.orders.map(o => `
-        <div style="background:#f9fafb; padding:8px 10px; border-radius:8px; margin-bottom:6px; border-left:3px solid var(--primary); display:flex; justify-content:space-between; align-items:center;">
-          <div>
-            <b>คิว #${o.queue} (${o.time})</b>
-            <div style="font-size:0.7rem; color:#6b7280;">${o.items.map(i => i.name + (i.toppings ? ' (+' + i.toppings + ')' : '')).join(', ')}</div>
-            ${o.note ? `<div style="font-size:0.68rem; color:var(--primary);">โน้ต: ${o.note}</div>` : ''}
+            <button onclick="editBOM('${menu.id}')" class="bg-white border px-2 py-0.5 rounded text-[11px] font-bold">⚙️ แก้ไขสูตร BOM</button>
           </div>
-          <b>${o.total} B.</b>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
-    function saveStoreSettings() {
-      appData.storeName = document.getElementById('settingStoreName').value;
-      appData.promptpay = document.getElementById('settingPromptpay').value;
+    function logWaste(ingId) {
+      const ing = db.ingredients.find(i => i.id === ingId);
+      const qty = parseFloat(prompt(`ระบุจำนวน ${ing.name} ที่เสียหาย/เสีย (${ing.unit}):`) || 0);
+      if (qty <= 0) return;
+      const reason = prompt('สาเหตุการเสีย (เช่น หมดอายุ, ทำหก, เสียสภาพ):') || 'ไม่ระบุ';
+      
+      const wasteCost = qty * getIngUnitCost(ing);
+      ing.qty -= qty;
+      db.wastes.unshift({
+        time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+        ingName: ing.name,
+        qty: qty,
+        unit: ing.unit,
+        cost: wasteCost,
+        reason: reason
+      });
+      alert(`🗑️ ตัดยอดเสีย ${ing.name} จำนวน ${qty} ${ing.unit} (มูลค่า ฿${wasteCost.toFixed(2)}) เรียบร้อยแล้ว`);
       saveData();
-      alert('บันทึกข้อมูลเรียบร้อยค่ะ');
     }
 
-    function resetQueue() {
-      if (confirm('ต้องการรีเซ็ตคิวกลับไปเริ่มที่ #1 ใช่ไหมคะ?')) {
-        appData.currentQueue = 1;
-        saveData();
-      }
+    function restock(ingId) {
+      const ing = db.ingredients.find(i => i.id === ingId);
+      const qty = parseFloat(prompt(`เติมจำนวน ${ing.name} (${ing.unit}):`) || 0);
+      if (qty > 0) { ing.qty += qty; saveData(); }
     }
 
-    function renderSettingsMenu() {
-      const container = document.getElementById('settingMenuList');
-      container.innerHTML = appData.menus.map(m => `
-        <div style="display:flex; justify-content:space-between; align-items:center; background:#f9fafb; padding:8px; border-radius:6px; margin-top:6px;">
-          <span>${m.name} (${m.price} B.)</span>
-          <button onclick="deleteMenu(${m.id})" style="color:#ef4444; border:none; background:none; cursor:pointer;">ลบ</button>
-        </div>
-      `).join('');
+    function addIngredient() {
+      const name = prompt('ชื่อวัตถุดิบใหม่:');
+      if (!name) return;
+      const brand = prompt('ยี่ห้อ/แหล่งซื้อแนะนำ:') || '-';
+      const price = parseFloat(prompt('ราคาซื้อรวม (บาท):') || 0);
+      const totalQty = parseFloat(prompt('ปริมาณที่ได้รวม (g หรือ ชิ้น):') || 1);
+      const unit = prompt('หน่วยนับ (เช่น g, ใบ, ml):') || 'g';
+
+      db.ingredients.push({
+        id: 'ing' + Date.now(),
+        name: name,
+        brand: brand,
+        purchasePrice: price,
+        totalQtyG: totalQty,
+        qty: totalQty,
+        unit: unit
+      });
+      saveData();
     }
 
-    function addNewMenu() {
-      const name = prompt('กรอกชื่อเมนูใหม่:');
-      const price = prompt('กรอกราคา (บาท):');
-      if (name && price) {
-        appData.menus.push({ id: Date.now(), name: name, price: Number(price) });
-        saveData();
-      }
+    function editBOM(menuId) {
+      const menu = db.menus.find(m => m.id === menuId);
+      let newRecipe = [];
+      db.ingredients.forEach(ing => {
+        if (confirm(`เมนู [${menu.name}] ใช้ [${ing.name}] หรือไม่?`)) {
+          const qty = parseFloat(prompt(`ปริมาณที่ใช้ต่อ 1 จาน (${ing.unit}):`) || 0);
+          if (qty > 0) newRecipe.push({ ingId: ing.id, qty: qty });
+        }
+      });
+      menu.recipe = newRecipe;
+      saveData();
     }
 
-    function deleteMenu(id) {
-      if (confirm('ลบเมนูนี้ใช่ไหมคะ?')) {
-        appData.menus = appData.menus.filter(m => m.id !== id);
-        saveData();
-      }
+    function renderReports() {
+      const totalSales = db.sales.reduce((s, o) => s + o.total, 0);
+      const totalProfit = db.sales.reduce((s, o) => s + (o.profit || 0), 0);
+      const totalWasteCost = db.wastes.reduce((s, w) => s + w.cost, 0);
+
+      document.getElementById('rptSales').innerText = `฿${totalSales}`;
+      document.getElementById('rptGrossProfit').innerText = `฿${totalProfit.toFixed(0)}`;
+      document.getElementById('rptWasteTotal').innerText = `฿${totalWasteCost.toFixed(0)}`;
+
+      const salesHist = document.getElementById('salesHistory');
+      salesHist.innerHTML = db.sales.length === 0 ? `<p class="text-gray-400 text-center">ไม่มีข้อมูลการขาย</p>` :
+        db.sales.map(s => `
+          <div class="border-b pb-1 flex justify-between items-center">
+            <div>
+              <span class="font-bold">${s.id}</span> <span class="text-gray-400">(${s.time} - ${s.type})</span>
+              <div class="text-[10px] text-gray-500">${s.items.map(i => `${i.name} x${i.qty}`).join(', ')}</div>
+            </div>
+            <div class="text-right">
+              <div class="font-bold text-green-600">฿${s.total}</div>
+              <div class="text-[10px] text-gray-400">กำไร ฿${(s.profit || 0).toFixed(0)}</div>
+            </div>
+          </div>
+        `).join('');
+
+      const wasteHist = document.getElementById('wasteHistory');
+      wasteHist.innerHTML = db.wastes.length === 0 ? `<p class="text-gray-400 text-center">ไม่มีประวัติยอดเสีย</p>` :
+        db.wastes.map(w => `
+          <div class="border-b pb-1 flex justify-between items-center text-red-600">
+            <div>
+              <span class="font-bold">${w.ingName}</span> (${w.qty} ${w.unit})
+              <div class="text-[10px] text-gray-400">สาเหตุ: ${w.reason} (${w.time})</div>
+            </div>
+            <div class="font-bold">-฿${w.cost.toFixed(2)}</div>
+          </div>
+        `).join('');
     }
 
-    function switchTab(tabId) {
-      document.getElementById('tabOrder').classList.add('hidden');
-      document.getElementById('tabKitchen').classList.add('hidden');
-      document.getElementById('tabSales').classList.add('hidden');
-      document.getElementById('tabSettings').classList.add('hidden');
-      document.getElementById(tabId).classList.remove('hidden');
-
-      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-      if (tabId === 'tabOrder') document.getElementById('navOrder').classList.add('active');
-      if (tabId === 'tabKitchen') document.getElementById('navKitchen').classList.add('active');
-      if (tabId === 'tabSales') document.getElementById('navSales').classList.add('active');
-      if (tabId === 'tabSettings') document.getElementById('navSettings').classList.add('active');
+    function saveSettings() {
+      db.settings.storeName = document.getElementById('cfgStoreName').value;
+      db.settings.receiptFooter = document.getElementById('cfgReceiptFooter').value;
+      db.settings.syncMode = document.getElementById('cfgSyncMode').value;
+      saveData();
+      alert('⚙️ บันทึกการตั้งค่าเรียบร้อยแล้วค่ะ!');
     }
 
+    function renderSettings() {
+      document.getElementById('cfgStoreName').value = db.settings.storeName || '';
+      document.getElementById('cfgReceiptFooter').value = db.settings.receiptFooter || '';
+      document.getElementById('cfgSyncMode').value = db.settings.syncMode || 'local';
+    }
+
+    function renderAll() {
+      renderPOS();
+      renderStock();
+      renderReports();
+      renderSettings();
+    }
+
+    // Init App
     renderAll();
   </script>
 </body>
