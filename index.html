@@ -272,7 +272,15 @@
           <button onclick="resetQueue()" class="btn btn-danger btn-small" style="width:auto;">รีเซ็ตคิวเริ่มที่ #1</button>
         </div>
       </div>
-
+      <!-- ตั้งค่าซอสราด -->
+      <div class="card">
+        <div class="card-title" style="display:flex; justify-content:space-between;">
+          <span>จัดการรายการซอสราด</span>
+          <button onclick="addNewSauce()" class="btn btn-primary btn-small" style="width:auto; background:#059669;">+ เพิ่มซอส</button>
+        </div>
+        <div id="settingSauceList" style="font-size:0.78rem;"></div>
+      </div>
+      
       <div class="card">
         <div class="card-title" style="display:flex; justify-content:space-between;">
           <span>จัดการเมนูอาหาร & สูตร BOM</span>
@@ -809,6 +817,63 @@
       
       const navMap = { 'tabOrder':'navOrder', 'tabHeld':'navHeld', 'tabKitchen':'navKitchen', 'tabStock':'navStock', 'tabSales':'navSales', 'tabSettings':'navSettings' };
       if (navMap[tabId]) document.getElementById(navMap[tabId]).classList.add('active');
+    }
+
+        // --- ระบบซอสราดเสริม ---
+    if (!appData.sauces) {
+      appData.sauces = [
+        { id: 201, name: "ซอสกระเพรา", price: 0 },
+        { id: 202, name: "ซอสนันบัง", price: 0 },
+        { id: 203, name: "ซอสเทอริยากิ", price: 0 },
+        { id: 204, name: "ซอสชีสเข้มข้น", price: 10 }
+      ];
+    }
+    let selectedSauces = [];
+
+    function renderSauces() {
+      const container = document.getElementById('sauceList');
+      if (!container) return;
+      container.innerHTML = appData.sauces.map(s => {
+        const isSelected = selectedSauces.includes(s.id);
+        return `<div onclick="toggleSauce(${s.id})" class="chip chip-sauce ${isSelected ? 'active' : ''}">🍾 ${s.name} ${s.price > 0 ? '(+' + s.price + ' B.)' : ''}</div>`;
+      }).join('');
+    }
+
+    function toggleSauce(id) {
+      if (selectedSauces.includes(id)) {
+        selectedSauces = selectedSauces.filter(i => i !== id);
+      } else {
+        if (selectedSauces.length >= 2) return alert('เลือกซอสราดได้สูงสุดไม่เกิน 2 ซอสค่ะ');
+        selectedSauces.push(id);
+      }
+      renderSauces();
+    }
+
+    function renderSettingsSauces() {
+      const container = document.getElementById('settingSauceList');
+      if (!container) return;
+      container.innerHTML = appData.sauces.map(s => `
+        <div style="display:flex; justify-content:space-between; align-items:center; background:#f9fafb; padding:6px; border-radius:6px; margin-top:4px;">
+          <span>🍾 ${s.name} (${s.price} B.)</span>
+          <button onclick="deleteSauce(${s.id})" style="color:#ef4444; border:none; background:none; cursor:pointer;">ลบ</button>
+        </div>
+      `).join('');
+    }
+
+    function addNewSauce() {
+      const name = prompt('กรอกชื่อซอสใหม่:');
+      const price = prompt('ราคาส่วนต่างที่ต้องบวกเพิ่ม (หากฟรีใส่ 0):');
+      if (name && price !== null) {
+        appData.sauces.push({ id: Date.now(), name, price: Number(price) });
+        saveData();
+      }
+    }
+
+    function deleteSauce(id) {
+      if (confirm('ลบรายการซอสนี้ใช่ไหมคะ?')) {
+        appData.sauces = appData.sauces.filter(s => s.id !== id);
+        saveData();
+      }
     }
 
     renderAll();
